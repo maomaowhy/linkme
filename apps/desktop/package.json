@@ -1,0 +1,29 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "pnpm run build:main && concurrently \"vite\" \"wait-on http://localhost:5173 && npx electron .\"",
+    "build:main": "tsup electron/main.ts electron/preload.ts electron/server/app.ts --platform node --format cjs --out-dir dist-electron --external electron --external ws --external express --external qrcode",
+    "electron:dev": "pnpm run build:main && npx electron .",
+    "pack": "pnpm run build && electron-builder",
+    "pack:dir": "pnpm run build && electron-builder --dir",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/qrcode": "^1.5.6",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^8.2.2",
+    "electron": "^36.3.2",
+    "electron-builder": "^25.1.8",
+    "tsup": "^8.5.0",
+    "vite": "^7.1.7",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "qrcode": "^1.5.4",
+    "ws": "^8.20.0"
+  },
+  "main": "dist-electron/main.cjs"
+}

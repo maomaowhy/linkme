@@ -1,0 +1,14 @@
+{
+  "name": "link-me",
+  "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "core-js",
+      "electron",
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+  }
+}

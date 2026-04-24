@@ -1,0 +1,145 @@
+
+<div class="wrap">
+  <h1>Link Me Phase 1 / Phase 2 方案</h1>
+  <p class="sub">目标：先打通 app-plus 与默认保存流程，再统一双端视觉。</p>
+
+  <section class="grid two">
+    <article class="card selected" data-id="desktop-flow-b">
+      <h2>推荐：首次弹窗 + 可设为默认</h2>
+      <ul>
+        <li>移动端点击开始推送</li>
+        <li>桌面端弹窗：选择保存位置</li>
+        <li>弹窗里有复选框：<b>设为默认位置</b></li>
+        <li>后续推送自动保存到默认位置</li>
+        <li>桌面端会话里持续显示传输进度</li>
+      </ul>
+      <p class="tag ok">推荐：最省操作，也最容易理解</p>
+    </article>
+
+    <article class="card" data-id="desktop-flow-a">
+      <h2>备选：每次都弹窗</h2>
+      <ul>
+        <li>每次推送都要桌面端手动选目录</li>
+        <li>没有默认位置概念</li>
+        <li>最简单，但操作最重</li>
+      </ul>
+      <p class="tag">不推荐：和你的“节省流程”目标冲突</p>
+    </article>
+  </section>
+
+  <section class="grid two top-gap">
+    <article class="mock desktop" data-id="desktop-layout">
+      <div class="mock-head">Desktop / 会话与批次结果</div>
+      <div class="mock-body desktop-body">
+        <aside class="left-nav">
+          <div class="logo">Link Me</div>
+          <div class="nav-item active">会话</div>
+          <div class="nav-item">设备</div>
+          <div class="nav-item">设置</div>
+          <div class="default-box">
+            <div>默认保存位置</div>
+            <div class="muted">~/Desktop/接收</div>
+          </div>
+        </aside>
+        <main class="content">
+          <div class="content-top">
+            <div>
+              <div class="title">会话与批次结果</div>
+              <div class="muted">同一 deviceId 重连后复用原会话，历史保留</div>
+            </div>
+            <div class="pill">默认保存：已开启</div>
+          </div>
+          <div class="content-grid">
+            <div class="session-col">
+              <div class="panel-title">会话列表</div>
+              <div class="session-card active">Link Me Mobile<br/><span>已连接 · 复用历史会话</span></div>
+            </div>
+            <div class="detail-col">
+              <div class="panel-title">当前批次</div>
+              <div class="transfer-card">
+                <div class="row between"><b>transfer-1777...</b><span class="ok">进行中 48%</span></div>
+                <div class="bar"><span style="width:48%"></span></div>
+                <div class="muted small">保存到：~/Desktop/接收</div>
+                <div class="file-row"><span>docs/report.pdf</span><span>820 KB / 1.7 MB</span></div>
+                <div class="file-row"><span>images/cover.png</span><span>已完成</span></div>
+              </div>
+              <div class="transfer-card faded">
+                <div class="row between"><b>transfer-1776...</b><span>已完成</span></div>
+                <div class="muted small">历史记录保留，可重试失败项</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </article>
+
+    <article class="mock mobile" data-id="mobile-layout">
+      <div class="mock-head">Mobile / 会话页</div>
+      <div class="phone">
+        <div class="phone-header">Link Me</div>
+        <div class="section status-box">
+          <div class="row between"><b>Link Me Mobile</b><span class="ok">已连接</span></div>
+          <div class="row gap"><button class="btn primary">扫码</button><button class="btn">连接桌面端</button><button class="btn danger">断开</button></div>
+        </div>
+        <div class="section">
+          <div class="section-title">传输</div>
+          <div class="row gap three">
+            <button class="btn tile">选择文件</button>
+            <button class="btn tile">选择文件夹</button>
+            <button class="btn tile primary">开始推送</button>
+          </div>
+          <div class="file-chip">接收/PixPin_2026.png · 1.2 MB</div>
+        </div>
+        <div class="section">
+          <div class="section-title">进行中的批次</div>
+          <div class="transfer-mini">
+            <div class="row between"><b>transfer-1777...</b><span class="ok">48%</span></div>
+            <div class="bar"><span style="width:48%"></span></div>
+            <div class="muted small">桌面端默认保存到 ~/Desktop/接收</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="flow top-gap">
+    <h2>Phase 1 流程</h2>
+    <div class="flow-row">
+      <div class="flow-node">同一 deviceId 重连</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">桌面端复用原会话</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">历史批次保留</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">未完成批次标记中断，可重试</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">移动端开始推送</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">桌面端首次弹窗选目录</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">可勾选设为默认</div>
+      <div class="arrow">→</div>
+      <div class="flow-node">后续自动保存并显示进度</div>
+    </div>
+  </section>
+</div>
+
+<style>
+  body{font-family:Inter,system-ui,sans-serif;background:#f5f7fb;color:#162033}
+  .wrap{padding:24px;max-width:1400px;margin:0 auto}
+  h1{font-size:32px;margin:0 0 8px}.sub{color:#667085;margin:0 0 24px}
+  .grid{display:grid;gap:20px}.grid.two{grid-template-columns:1fr 1fr}.top-gap{margin-top:24px}
+  .card,.mock,.flow{background:#fff;border:1px solid #e7ecf5;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+  .card.selected{outline:3px solid #5b8cff}
+  .tag{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:999px;background:#f2f4f7;color:#475467}.tag.ok{background:#e8f7ef;color:#16a34a}
+  .mock-head{font-weight:700;margin-bottom:12px}
+  .desktop-body{display:grid;grid-template-columns:220px 1fr;gap:16px;min-height:540px}
+  .left-nav{background:#fbfcfe;border:1px solid #eef2f8;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .logo{font-weight:700;margin-bottom:8px}.nav-item{padding:10px 12px;border-radius:12px;color:#667085}.nav-item.active{background:#eef4ff;color:#2f63ff}
+  .default-box{margin-top:auto;padding:12px;border:1px solid #dbe6ff;border-radius:14px;background:#f8fbff}.muted{color:#667085}.small{font-size:12px}
+  .content{display:flex;flex-direction:column;gap:16px}.content-top{display:flex;justify-content:space-between;align-items:flex-start}.title{font-size:24px;font-weight:800}.pill{background:#eefaf2;color:#16a34a;padding:8px 12px;border-radius:999px}
+  .content-grid{display:grid;grid-template-columns:260px 1fr;gap:16px}.session-col,.detail-col{background:#fbfcfe;border:1px solid #eef2f8;border-radius:18px;padding:16px}.panel-title{font-weight:700;margin-bottom:14px}.session-card{padding:14px;border-radius:16px;background:#eef4ff;color:#2f63ff}.session-card span{color:#16a34a}.transfer-card{padding:16px;border-radius:16px;background:#fff;border:1px solid #e7ecf5;margin-bottom:12px}.transfer-card.faded{opacity:.8}.row{display:flex;align-items:center}.between{justify-content:space-between}.gap{gap:10px}.bar{height:8px;border-radius:999px;background:#edf1f7;overflow:hidden;margin:12px 0}.bar span{display:block;height:100%;background:linear-gradient(90deg,#2f63ff,#34d399)}.file-row{display:flex;justify-content:space-between;padding-top:8px;color:#344054}
+  .phone{width:320px;margin:0 auto;background:#fff;border:10px solid #111827;border-radius:36px;padding:16px}.phone-header{text-align:center;font-weight:700;margin-bottom:12px}.section{background:#fff;border:1px solid #eef2f8;border-radius:18px;padding:14px;margin-bottom:12px}.section-title{font-weight:700;margin-bottom:10px}.btn{border:none;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid #d0d5dd}.btn.primary{background:#2f63ff;color:#fff;border-color:#2f63ff}.btn.danger{background:#ff4d4f;color:#fff;border-color:#ff4d4f}.btn.tile{flex:1;min-height:56px}.three>*{flex:1}.status-box{background:#fbfcfe}.file-chip{margin-top:12px;background:#f3f6fb;padding:10px 12px;border-radius:12px;color:#344054}.transfer-mini{background:#fbfcfe;border-radius:14px;padding:12px}
+  .flow h2{margin-top:0}.flow-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.flow-node{background:#f8fbff;border:1px solid #dbe6ff;color:#1d4ed8;padding:10px 12px;border-radius:12px}.arrow{color:#98a2b3;font-weight:700}
+</style>

@@ -1,0 +1,14 @@
+node_modules
+.pnpm-store
+.DS_Store
+dist
+build
+out
+coverage
+.uni
+.hbuilderx
+/apps/desktop/node_modules
+/apps/desktop/dist
+/apps/desktop/dist-electron
+/apps/mobile/node_modules
+/apps/mobile/dist
