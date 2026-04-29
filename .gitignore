@@ -1,14 +1,26 @@
-node_modules
-.pnpm-store
+# System
 .DS_Store
-dist
-build
-out
-coverage
-.uni
-.hbuilderx
-/apps/desktop/node_modules
-/apps/desktop/dist
-/apps/desktop/dist-electron
-/apps/mobile/node_modules
-/apps/mobile/dist
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Android/iOS generated local files
+android/.gradle/
+android/local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
