@@ -36,7 +36,7 @@ void main() {
         );
 
     expect(batch.status, TransferStatus.failed);
-    expect(batch.error, contains('ack'));
+    expect(batch.error, TransferClient.networkUnavailableMessage);
 
     await server.close();
     await temp.delete(recursive: true);

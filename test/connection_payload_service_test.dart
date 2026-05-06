@@ -25,7 +25,7 @@ void main() {
 
     expect(peer.host.address, '192.168.1.20');
     expect(peer.port, 53138);
-    expect(peer.endpoints.map((endpoint) => endpoint.host.address), [
+    expect(peer.endpoints.map((endpoint) => endpoint.displayHost), [
       '192.168.1.20',
     ]);
   });
@@ -36,7 +36,7 @@ void main() {
     );
 
     expect(peer.host.address, '10.0.0.5');
-    expect(peer.endpoints.map((endpoint) => endpoint.host.address), [
+    expect(peer.endpoints.map((endpoint) => endpoint.displayHost), [
       '10.0.0.5',
       '192.168.1.20',
     ]);

@@ -1,10 +1,15 @@
 import 'dart:io';
 
 class PeerEndpoint {
-  const PeerEndpoint({required this.host, required this.port});
+  const PeerEndpoint({this.host, this.hostName, required this.port})
+    : assert(host != null || hostName != null);
 
-  final InternetAddress host;
+  final InternetAddress? host;
+  final String? hostName;
   final int port;
+
+  Object get connectHost => host ?? hostName!;
+  String get displayHost => host?.address ?? hostName!;
 }
 
 class PeerDevice {
@@ -30,6 +35,9 @@ class PeerDevice {
     if (endpoints.isNotEmpty) return endpoints;
     return [PeerEndpoint(host: host, port: port)];
   }
+
+  String get displayHost => connectionEndpoints.first.displayHost;
+  String get displayEndpoint => '$displayHost:$port';
 
   PeerDevice copyWith({
     String? name,

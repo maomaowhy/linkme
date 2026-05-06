@@ -50,9 +50,13 @@ class RecordingTransferClient extends TransferClient {
 }
 
 class RecordingTextTransferClient extends TransferClient {
-  RecordingTextTransferClient({this.helloResult = true});
+  RecordingTextTransferClient({
+    this.helloResult = true,
+    this.textResult = true,
+  });
 
   final bool helloResult;
+  final bool textResult;
   String? sentText;
   int? lastSenderPort;
   PeerDevice? helloPeer;
@@ -68,7 +72,7 @@ class RecordingTextTransferClient extends TransferClient {
   }) async {
     sentText = text;
     lastSenderPort = senderPort;
-    return true;
+    return textResult;
   }
 
   @override
@@ -316,6 +320,29 @@ void main() {
     expect(transferClient.lastSenderPort, 34570);
   });
 
+  test('sendTextTo reports network unavailable when sending fails', () async {
+    final transferClient = RecordingTextTransferClient(textResult: false);
+    final state = AppState(transferClient: transferClient);
+    state.deviceId = 'sender-1';
+    state.deviceName = 'Sender';
+    state.transferPort = 34579;
+
+    final ok = await state.sendTextTo(
+      PeerDevice(
+        deviceId: 'receiver-1',
+        name: 'Receiver',
+        host: InternetAddress.loopbackIPv4,
+        port: 45678,
+        platform: 'test',
+        lastSeen: DateTime.now(),
+      ),
+      'hello',
+    );
+
+    expect(ok, isFalse);
+    expect(state.manualConnectError, TransferClient.networkUnavailableMessage);
+  });
+
   test(
     'direct peers remain available for callbacks while search continues',
     () {
@@ -383,4 +410,23 @@ void main() {
       expect(state.peers.single.deviceId, 'manual-phone');
     },
   );
+
+  test('removePeer removes a nearby device by id', () {
+    final state = AppState();
+    state.upsertPeerForTesting(
+      PeerDevice(
+        deviceId: 'android-1',
+        name: 'Android Phone',
+        host: InternetAddress('192.168.1.30'),
+        port: 45678,
+        platform: 'android',
+        lastSeen: DateTime.now(),
+      ),
+    );
+
+    final removed = state.removePeer('android-1');
+
+    expect(removed, isTrue);
+    expect(state.peers, isEmpty);
+  });
 }

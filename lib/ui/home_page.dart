@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -6,7 +8,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/peer_device.dart';
 import '../models/transfer_models.dart';
+import '../services/file_service.dart';
 import '../services/platform_capability_service.dart';
+import '../services/transfer_client.dart';
 import '../state/app_state.dart';
 import 'widgets/device_card.dart';
 import 'widgets/glass_card.dart';
@@ -21,6 +25,11 @@ String? _saveDirectoryLabel(String path) {
   if (parts.isEmpty) return null;
   if (parts.length == 1) return parts.last;
   return '${parts[parts.length - 2]} / ${parts.last}';
+}
+
+String _directoryAccessHint(String path) {
+  if (!Platform.isIOS) return path;
+  return '$path\n\n可在 iPhone「文件」App 中访问：我的 iPhone > Link Me > LinkMe。iOS 不允许 App 静默写入全局 iCloud Drive/Downloads。';
 }
 
 String _formatBytes(int bytes) {
@@ -97,6 +106,7 @@ class _HomePageState extends State<HomePage> {
                             onSend: state.sendFilesTo,
                             onSendText: _showSendTextDialog,
                             onOpenPeer: _showPeerDetails,
+                            onRemovePeer: state.removePeer,
                             onDeleteTransfer: _confirmDeleteTransfer,
                             onRefreshPeers: state.refreshNearbyDevices,
                           ),
@@ -228,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
-                  directory,
+                  _directoryAccessHint(directory),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.68),
                     fontSize: 12,
@@ -244,18 +254,30 @@ class _HomePageState extends State<HomePage> {
             ),
             FilledButton(
               onPressed: () async {
+                final action = FileService.saveLocationOpenActionFor(
+                  Platform.operatingSystem,
+                );
                 final messenger = ScaffoldMessenger.of(context);
                 final navigator = Navigator.of(dialogContext);
-                final opened = await state.openDirectory(directory);
+                final opened = action.canAttemptOpen
+                    ? await state.openDirectory(directory)
+                    : false;
                 if (!dialogContext.mounted) return;
                 navigator.pop();
                 if (!opened) {
                   messenger.showSnackBar(
-                    const SnackBar(content: Text('无法自动打开目录，请按显示路径手动进入')),
+                    SnackBar(
+                      content: Text(action.failureMessage),
+                      duration: const Duration(seconds: 5),
+                    ),
                   );
                 }
               },
-              child: const Text('打开文件夹'),
+              child: Text(
+                FileService.saveLocationOpenActionFor(
+                  Platform.operatingSystem,
+                ).buttonLabel,
+              ),
             ),
           ],
         );
@@ -351,7 +373,7 @@ class _HomePageState extends State<HomePage> {
                     SelectableText(
                       dialogState.saveDirectory.isEmpty
                           ? '正在加载保存目录'
-                          : dialogState.saveDirectory,
+                          : _directoryAccessHint(dialogState.saveDirectory),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.82),
                         fontSize: 13,
@@ -757,7 +779,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         subtitle: Text(
-                          '${peer.host.address}:${peer.port}',
+                          peer.displayEndpoint,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.66),
                           ),
@@ -818,7 +840,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 6),
                     SelectableText(
-                      '${peer.host.address}:${peer.port} · ${peer.platform}',
+                      '${peer.displayEndpoint} · ${peer.platform}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                       ),
@@ -960,9 +982,11 @@ class _SendTextDialogState extends State<_SendTextDialog> {
     final ok = await widget.appState.sendTextTo(widget.peer, _controller.text);
     if (!mounted) return;
     if (ok) Navigator.of(context).pop();
-    widget.messenger.showSnackBar(
-      SnackBar(content: Text(ok ? '文本已发送' : '文本发送失败')),
-    );
+    final message = ok
+        ? '文本已发送'
+        : widget.appState.manualConnectError ??
+              TransferClient.networkUnavailableMessage;
+    widget.messenger.showSnackBar(SnackBar(content: Text(message)));
     if (!ok && mounted) setState(() => _isSending = false);
   }
 }
@@ -1276,6 +1300,7 @@ class _HomeTabs extends StatelessWidget {
     required this.onSend,
     required this.onSendText,
     required this.onOpenPeer,
+    required this.onRemovePeer,
     required this.onDeleteTransfer,
     required this.onRefreshPeers,
   });
@@ -1284,6 +1309,7 @@ class _HomeTabs extends StatelessWidget {
   final void Function(PeerDevice peer) onSend;
   final void Function(PeerDevice peer) onSendText;
   final void Function(PeerDevice peer) onOpenPeer;
+  final bool Function(String deviceId) onRemovePeer;
   final Future<void> Function(TransferBatch batch) onDeleteTransfer;
   final Future<void> Function() onRefreshPeers;
 
@@ -1340,6 +1366,7 @@ class _HomeTabs extends StatelessWidget {
                       onSend: onSend,
                       onSendText: onSendText,
                       onOpenPeer: onOpenPeer,
+                      onRemovePeer: onRemovePeer,
                     ),
                     _TransfersTab(
                       batches: state.batches,
@@ -1362,12 +1389,14 @@ class _PeersTab extends StatelessWidget {
     required this.onSend,
     required this.onSendText,
     required this.onOpenPeer,
+    required this.onRemovePeer,
   });
 
   final AppState state;
   final void Function(PeerDevice peer) onSend;
   final void Function(PeerDevice peer) onSendText;
   final void Function(PeerDevice peer) onOpenPeer;
+  final bool Function(String deviceId) onRemovePeer;
 
   @override
   Widget build(BuildContext context) {
@@ -1389,6 +1418,7 @@ class _PeersTab extends StatelessWidget {
           onSend: () => onSend(peer),
           onSendText: () => onSendText(peer),
           onOpen: () => onOpenPeer(peer),
+          onRemove: () => onRemovePeer(peer.deviceId),
         );
       },
     );

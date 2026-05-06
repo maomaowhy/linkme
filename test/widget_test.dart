@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link_me/main.dart';
@@ -138,5 +140,40 @@ void main() {
     expect(transferClient.sentText, 'hello text');
     expect(tester.takeException(), isNull);
     expect(find.text('发送文本给 Android Phone'), findsNothing);
+  });
+
+  testWidgets('nearby device card can be removed', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final state = AppState();
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppState>.value(
+        value: state,
+        child: const MaterialApp(home: HomePage()),
+      ),
+    );
+    await tester.pump();
+
+    state.isStarting = false;
+    state.upsertPeerForTesting(
+      PeerDevice(
+        deviceId: 'android-1',
+        name: 'Android Phone',
+        host: InternetAddress('192.168.1.30'),
+        port: 45678,
+        platform: 'android',
+        lastSeen: DateTime.now(),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Android Phone'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('移除设备'));
+    await tester.pump();
+
+    expect(find.text('Android Phone'), findsNothing);
   });
 }

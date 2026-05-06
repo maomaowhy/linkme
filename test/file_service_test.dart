@@ -34,6 +34,49 @@ void main() {
     expect(FileService.supportsDownloadsDirectoryApi('macos'), isTrue);
   });
 
+  test('iosDefaultSaveRoot uses the app Documents folder directly', () {
+    final documents =
+        '${Directory.systemTemp.path}${Platform.pathSeparator}Documents';
+
+    expect(FileService.iosDefaultSaveRoot(documents), documents);
+  });
+
+  test('saveLocationOpenActionFor describes per-platform behavior', () {
+    final ios = FileService.saveLocationOpenActionFor('ios');
+    expect(ios.buttonLabel, '查看文件位置');
+    expect(ios.canAttemptOpen, isFalse);
+    expect(ios.failureMessage, contains('文件 App'));
+
+    final android = FileService.saveLocationOpenActionFor('android');
+    expect(android.buttonLabel, '查看保存位置');
+    expect(android.canAttemptOpen, isTrue);
+    expect(android.failureMessage, contains('下载'));
+
+    final macos = FileService.saveLocationOpenActionFor('macos');
+    expect(macos.buttonLabel, '打开文件夹');
+    expect(macos.canAttemptOpen, isTrue);
+    expect(macos.failureMessage, contains('Finder'));
+  });
+
+  test('migrateIosDownloadsSaveDirectory removes the extra Downloads segment', () {
+    final documents =
+        '${Directory.systemTemp.path}${Platform.pathSeparator}Documents';
+    final oldPath =
+        '$documents${Platform.pathSeparator}Downloads${Platform.pathSeparator}LinkMe';
+
+    expect(
+      FileService.migrateIosDownloadsSaveDirectory(oldPath, documents),
+      '$documents${Platform.pathSeparator}LinkMe',
+    );
+    expect(
+      FileService.migrateIosDownloadsSaveDirectory(
+        '$documents${Platform.pathSeparator}Custom${Platform.pathSeparator}LinkMe',
+        documents,
+      ),
+      isNull,
+    );
+  });
+
   test('normalizeSaveDirectory stores files under a LinkMe child folder', () {
     final service = FileService();
     final base =

@@ -7,6 +7,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/transfer_models.dart';
 
+class SaveLocationOpenAction {
+  const SaveLocationOpenAction({
+    required this.buttonLabel,
+    required this.failureMessage,
+    required this.canAttemptOpen,
+  });
+
+  final String buttonLabel;
+  final String failureMessage;
+  final bool canAttemptOpen;
+}
+
 class SaveDirectoryException implements Exception {
   const SaveDirectoryException(this.message, [this.cause]);
 
@@ -39,6 +51,22 @@ class FileService {
     final preferences = await SharedPreferences.getInstance();
     final saved = preferences.getString(_saveDirectoryKey);
     if (saved != null && saved.isNotEmpty) {
+      if (Platform.isIOS) {
+        final documents = await getApplicationDocumentsDirectory();
+        final migrated = migrateIosDownloadsSaveDirectory(
+          saved,
+          documents.path,
+        );
+        if (migrated != null) {
+          try {
+            await ensureWritableDirectory(migrated);
+            await persistSaveDirectory(migrated);
+            return migrated;
+          } catch (_) {
+            await preferences.remove(_saveDirectoryKey);
+          }
+        }
+      }
       final normalized = normalizeSaveDirectory(saved);
       if (_isAndroidAppPrivateDirectory(normalized)) {
         await preferences.remove(_saveDirectoryKey);
@@ -126,6 +154,10 @@ class FileService {
       final external = await getExternalStorageDirectory();
       if (external != null) return external.path;
     }
+    if (Platform.isIOS) {
+      final documents = await getApplicationDocumentsDirectory();
+      return iosDefaultSaveRoot(documents.path);
+    }
     final desktopDownloads = desktopDownloadsPathFromEnvironment(
       Platform.environment,
       Platform.operatingSystem,
@@ -137,6 +169,49 @@ class FileService {
     }
     final documents = await getApplicationDocumentsDirectory();
     return documents.path;
+  }
+
+  static String iosDefaultSaveRoot(String documentsPath) {
+    return documentsPath;
+  }
+
+  static String? migrateIosDownloadsSaveDirectory(
+    String savedPath,
+    String documentsPath,
+  ) {
+    final normalizedSaved = savedPath.replaceAll('\\', '/');
+    final normalizedDocuments = documentsPath.replaceAll('\\', '/');
+    final oldPath = '$normalizedDocuments/Downloads/$appFolderName';
+    if (normalizedSaved != oldPath) return null;
+    return '$documentsPath${Platform.pathSeparator}$appFolderName';
+  }
+
+  static SaveLocationOpenAction saveLocationOpenActionFor(
+    String operatingSystem,
+  ) {
+    return switch (operatingSystem) {
+      'ios' => const SaveLocationOpenAction(
+        buttonLabel: '查看文件位置',
+        failureMessage:
+            'iOS 不支持自动打开文件夹，请在文件 App > 我的 iPhone > Link Me > LinkMe 中查看。',
+        canAttemptOpen: false,
+      ),
+      'android' => const SaveLocationOpenAction(
+        buttonLabel: '查看保存位置',
+        failureMessage: 'Android 系统文件管理器可能不支持自动定位目录，请手动打开「下载」目录下的 LinkMe 文件夹。',
+        canAttemptOpen: true,
+      ),
+      'macos' => const SaveLocationOpenAction(
+        buttonLabel: '打开文件夹',
+        failureMessage: '无法通过 Finder 打开该文件夹，请确认目录存在且已授予访问权限。',
+        canAttemptOpen: true,
+      ),
+      _ => const SaveLocationOpenAction(
+        buttonLabel: '打开文件夹',
+        failureMessage: '无法自动打开目录，请按显示路径手动进入。',
+        canAttemptOpen: true,
+      ),
+    };
   }
 
   static bool supportsDownloadsDirectoryApi(String operatingSystem) {
@@ -214,15 +289,19 @@ class FileService {
 
   Future<bool> openDirectory(String directoryPath) async {
     if (directoryPath.trim().isEmpty) return false;
-    if (Platform.isAndroid) {
+    if (Platform.isIOS) return false;
+    if (Platform.isAndroid || Platform.isMacOS) {
       try {
-        return await _channel.invokeMethod<bool>('openDirectory', {
+        final opened =
+            await _channel.invokeMethod<bool>('openDirectory', {
               'path': directoryPath,
             }) ??
             false;
+        if (opened) return true;
       } catch (_) {
-        return false;
+        // Fall back below on macOS; Android has no reliable shell fallback.
       }
+      if (Platform.isAndroid) return false;
     }
 
     final command = switch (Platform.operatingSystem) {

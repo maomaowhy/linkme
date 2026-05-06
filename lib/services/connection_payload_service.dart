@@ -39,7 +39,7 @@ class ConnectionPayloadService {
         final endpoint = _parseEndpoint(candidate);
         if (parsedEndpoints.any(
           (entry) =>
-              entry.host.address == endpoint.host.address &&
+              entry.displayHost == endpoint.host.address &&
               entry.port == endpoint.port,
         )) {
           continue;
@@ -58,9 +58,9 @@ class ConnectionPayloadService {
     return PeerDevice(
       deviceId:
           json['deviceId'] as String? ??
-          'qr-${endpoint.host.address}:${endpoint.port}',
-      name: json['name'] as String? ?? '扫码设备 ${endpoint.host.address}',
-      host: endpoint.host,
+          'qr-${endpoint.displayHost}:${endpoint.port}',
+      name: json['name'] as String? ?? '扫码设备 ${endpoint.displayHost}',
+      host: endpoint.host!,
       port: endpoint.port,
       platform: fallbackPlatform,
       lastSeen: DateTime.now(),

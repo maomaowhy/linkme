@@ -129,6 +129,7 @@ class AppState extends ChangeNotifier {
         deviceId: deviceId,
         deviceName: deviceName,
         transferPort: port,
+        advertisedEndpoints: localEndpoints,
         onPeer: _upsertPeer,
       );
     } catch (error) {
@@ -176,6 +177,12 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  bool removePeer(String deviceId) {
+    final removed = _peers.remove(deviceId) != null;
+    if (removed) notifyListeners();
+    return removed;
+  }
+
   Future<bool> sendTextTo(PeerDevice peer, String text) async {
     final ok = await _transferClient.sendText(
       peer: peer,
@@ -185,7 +192,7 @@ class AppState extends ChangeNotifier {
       text: text,
     );
     if (!ok) {
-      manualConnectError = '文本发送失败，请确认对方在线并可访问。';
+      manualConnectError = TransferClient.networkUnavailableMessage;
     } else {
       manualConnectError = null;
     }
@@ -277,6 +284,7 @@ class AppState extends ChangeNotifier {
           deviceId: deviceId,
           deviceName: deviceName,
           transferPort: port,
+          advertisedEndpoints: localEndpoints,
           onPeer: _upsertPeer,
         );
       }
@@ -394,8 +402,7 @@ class AppState extends ChangeNotifier {
   void _dropExpiredPeers() {
     final cutoff = DateTime.now().subtract(const Duration(seconds: 8));
     _peers.removeWhere(
-      (_, peer) =>
-          !_isPinnedPeer(peer) && peer.lastSeen.isBefore(cutoff),
+      (_, peer) => !_isPinnedPeer(peer) && peer.lastSeen.isBefore(cutoff),
     );
   }
 

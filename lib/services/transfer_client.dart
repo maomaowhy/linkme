@@ -11,6 +11,7 @@ import 'transfer_protocol.dart';
 class TransferClient {
   TransferClient({this.ackTimeout = const Duration(seconds: 30)});
 
+  static const networkUnavailableMessage = '网络连接异常，请检查局域网是否可用。';
   static const _flushEveryBytes = 4 * 1024 * 1024;
 
   final Duration ackTimeout;
@@ -204,9 +205,7 @@ class TransferClient {
       onBatchUpdated(batch);
       return batch;
     } catch (error) {
-      final message = (waitingForAck || error is SocketException)
-          ? 'receiver closed without ack: $error'
-          : '$error';
+      final message = _userFacingError(error, waitingForAck: waitingForAck);
       batch = batch.copyWith(status: TransferStatus.failed, error: message);
       onBatchUpdated(batch);
       return batch;
@@ -389,7 +388,7 @@ class TransferClient {
     for (final endpoint in peer.connectionEndpoints) {
       try {
         return await Socket.connect(
-          endpoint.host,
+          endpoint.connectHost,
           endpoint.port,
           timeout: timeout,
         );
@@ -398,6 +397,19 @@ class TransferClient {
       }
     }
     throw lastError ?? SocketException('No peer endpoint available');
+  }
+
+  String _userFacingError(Object error, {bool waitingForAck = false}) {
+    final message = '$error';
+    if (waitingForAck ||
+        error is SocketException ||
+        error is TimeoutException ||
+        message.contains('receiver closed without ack') ||
+        message.contains('receiver decision timeout') ||
+        message.contains('receiver ack timeout')) {
+      return networkUnavailableMessage;
+    }
+    return message;
   }
 
   String _fileName(File file) {

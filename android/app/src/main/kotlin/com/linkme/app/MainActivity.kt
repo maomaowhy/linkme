@@ -3,6 +3,7 @@ package com.linkme.app
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
@@ -69,25 +70,48 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun openDirectory(path: String): Boolean {
+        val documentId = documentIdForPath(path)
+        if (documentId != null) {
+            try {
+                val uri = DocumentsContract.buildDocumentUri(
+                    "com.android.externalstorage.documents",
+                    documentId
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "vnd.android.document/directory")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                }
+                startActivity(intent)
+                return true
+            } catch (_: Throwable) {
+                // Fall back to the storage root below.
+            }
+        }
+
         return try {
-            val uri = Uri.parse(path)
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "resource/folder")
+                setDataAndType(Uri.parse("content://com.android.externalstorage.documents/root/primary"), "resource/folder")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(intent)
             true
         } catch (_: Throwable) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(Uri.parse("content://com.android.externalstorage.documents/root/primary"), "resource/folder")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(intent)
-                true
-            } catch (_: Throwable) {
-                false
-            }
+            false
+        }
+    }
+
+    private fun documentIdForPath(path: String): String? {
+        val normalized = path.trim().replace('\\', '/')
+        val primaryStorage = "/storage/emulated/0/"
+        val legacyPrimaryStorage = "/sdcard/"
+        return when {
+            normalized.startsWith(primaryStorage) -> "primary:${normalized.removePrefix(primaryStorage)}"
+            normalized.startsWith(legacyPrimaryStorage) -> "primary:${normalized.removePrefix(legacyPrimaryStorage)}"
+            normalized == "/storage/emulated/0" || normalized == "/sdcard" -> "primary:"
+            else -> null
         }
     }
 }

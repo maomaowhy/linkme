@@ -26,9 +26,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_linkme._udp</string>
+		<string>_linkme._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Link Me 需要使用摄像头扫描连接二维码。</string>
@@ -58,6 +60,8 @@
 		</dict>
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

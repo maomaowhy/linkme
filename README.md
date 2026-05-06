@@ -6,7 +6,7 @@ Link Me 现在是一个纯 Flutter 的局域网 AirDrop 风格文件互传应用
 
 - 跨端 Flutter 单项目：`android`、`ios`、`macos`、`windows`。
 - 稳定设备身份：首次启动生成并持久化 `deviceId`。
-- 局域网发现：UDP 广播发现在线 Link Me 设备。
+- 局域网发现：Bonjour/mDNS（NSD/DNS-SD）发现在线 Link Me 设备，兼容 iOS 本地网络权限模型。
 - 局域网直传：`dart:io` TCP Socket 分片传输文件。
 - 多选文件：使用 `file_picker` 选择多个文件。
 - 自动接收：接收端保存到默认目录，可在首页修改并持久化。
@@ -49,7 +49,7 @@ flutter build macos --debug
 
 ## Web / Chrome 说明
 
-Chrome/Web 不能使用 `dart:io` 的 TCP Socket、UDP 广播和本地文件系统能力，因此浏览器版本只作为说明页，不提供文件互传。请使用 Android、iOS、macOS 或 Windows 客户端进行局域网互传。
+Chrome/Web 不能使用 `dart:io` 的 TCP Socket、Bonjour/mDNS 发现和本地文件系统能力，因此浏览器版本只作为说明页，不提供文件互传。请使用 Android、iOS、macOS 或 Windows 客户端进行局域网互传。
 
 ```bash
 flutter run -d chrome
@@ -72,6 +72,6 @@ Android 默认保存到 App 专属外部目录，避免直接写入 `/storage/em
 
 ## 技术说明
 
-- 发现层：当前使用 UDP 广播作为第一版发现机制，比错误使用 `multicast_dns` 的 announce API 更直接可控；后续如需 Bonjour/mDNS 服务发布，可替换为成熟 advertise/discover 包。
+- 发现层：使用 `nsd` 插件发布和发现 `_linkme._tcp` Bonjour/mDNS 服务；服务 TXT 记录携带设备 ID、设备名和平台，发现到服务后继续使用现有 TCP 传输协议。
 - 传输层：协议采用 4 字节大端长度前缀 JSON frame + 原始文件字节流，避免大文件一次性载入内存。
 - 历史层：当前运行期保留传输批次；下一步可把批次记录落盘到 `shared_preferences` 或本地数据库。

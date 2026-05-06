@@ -94,7 +94,7 @@ class WebUnsupportedPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Chrome/Web 不能使用 dart:io 的 TCP Socket、UDP 广播和本地文件保存能力。请运行 Android、iOS、macOS 或 Windows 版本来发现设备并传输文件。',
+                          'Chrome/Web 不能使用 dart:io 的 TCP Socket、Bonjour/mDNS 发现和本地文件保存能力。请运行 Android、iOS、macOS 或 Windows 版本来发现设备并传输文件。',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.76),

@@ -10,12 +10,14 @@ class DeviceCard extends StatelessWidget {
     required this.onSend,
     required this.onSendText,
     required this.onOpen,
+    required this.onRemove,
   });
 
   final PeerDevice peer;
   final VoidCallback onSend;
   final VoidCallback onSendText;
   final VoidCallback onOpen;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +64,7 @@ class DeviceCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${peer.platform} · ${peer.host.address}:${peer.port}',
+                        '${peer.platform} · ${peer.displayEndpoint}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -72,6 +74,11 @@ class DeviceCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  tooltip: '移除设备',
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
                 ),
               ],
             ),
