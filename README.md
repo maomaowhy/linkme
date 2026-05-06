@@ -39,6 +39,30 @@ export PUB_HOSTED_URL=https://pub.flutter-io.cn
 export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
 ```
 
+## 打包发布
+
+项目提供交互式打包脚本，可按平台选择构建 iOS、macOS、Android，产物统一输出到 `dist/`。首次使用前确保已安装 Flutter、Xcode；iOS 还需要 Apple Developer 账号、证书、描述文件和已登记的测试设备 UDID。
+
+```bash
+chmod +x scripts/package_release.sh
+./scripts/package_release.sh
+```
+
+脚本启动后选择打包类别：
+
+- `1) iOS IPA（Ad Hoc，Xcode archive/export）`：默认导出 Ad Hoc IPA，用于内部分发或真机安装测试。
+- `2) macOS App zip`：构建 macOS Release App，并压缩成 zip。
+- `3) Android APK`：构建 Android Release APK。
+- `4) 全部`：按 iOS、macOS、Android 顺序依次打包。
+
+打包产物目录：
+
+- iOS：`dist/ios/ipa/*.ipa`，中间归档为 `dist/ios/link_me.xcarchive`，导出配置为 `dist/ios/ExportOptions.plist`。
+- macOS：`dist/macos/link_me-macos.zip`。
+- Android：`dist/android/link_me-android.apk`。
+
+如果 iOS 签名失败，优先检查 Xcode 是否登录正确团队、Bundle ID 是否匹配、Ad Hoc 描述文件是否包含目标设备 UDID。也可以直接打开 `ios/Runner.xcworkspace`，选择 `Runner` scheme 后通过 Xcode 的 `Product > Archive` 手动归档和导出。
+
 ## 验证
 
 ```bash
