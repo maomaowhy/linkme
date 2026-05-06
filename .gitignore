@@ -24,3 +24,6 @@ ios/Flutter/flutter_export_environment.sh
 macos/Flutter/GeneratedPluginRegistrant.swift
 macos/Flutter/ephemeral/
 windows/flutter/ephemeral/
+
+# Release artifacts
+dist/
